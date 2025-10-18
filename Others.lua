@@ -1,6 +1,12 @@
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
-local mouse = player:GetMouse()
+local character = player.Character or player.CharacterAdded:Wait()
+local UserInputService = game:GetService("UserInputService")
+local UIS = game:GetService("UserInputService")
+local speed = 16
+local flying = false
+local jumpCount = 0
+local maxJumps = 3
 
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
 local frame = Instance.new("Frame", gui)
