@@ -30,12 +30,16 @@ SpeedSlider.FocusLost:Connect(function()
     SpeedSlider.Text = "Speed: " .. speed
 end)
 
-walkSpeedSlider.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        local speed = tonumber(walkSpeedSlider.Text)
-        if speed then
-            setWalkSpeed(speed)
-        end
+FlyButton.Parent = Frame
+FlyButton.Size = UDim2.new(1, 0, 0, 50)
+FlyButton.Position = UDim2.new(0, 0, 0, 50)
+FlyButton.Text = "Toggle Fly"
+FlyButton.MouseButton1Click:Connect(function()
+    flying = not flying
+    if flying then
+        character.Humanoid.PlatformStand = true
+    else
+        character.Humanoid.PlatformStand = false
     end
 end)
 
