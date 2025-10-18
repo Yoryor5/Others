@@ -29,7 +29,6 @@ SpeedSlider.FocusLost:Connect(function()
     speed = tonumber(SpeedSlider.Text) or speed
     SpeedSlider.Text = "Speed: " .. speed
 end)
-
 FlyButton.Parent = Frame
 FlyButton.Size = UDim2.new(1, 0, 0, 50)
 FlyButton.Position = UDim2.new(0, 0, 0, 50)
@@ -43,31 +42,56 @@ FlyButton.MouseButton1Click:Connect(function()
     end
 end)
 
-flyToggle.MouseButton1Click:Connect(function()
-    flying = not flying
-    if flying then
-        local bodyVelocity = Instance.new("BodyVelocity", player.Character.HumanoidRootPart)
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
-
-        while flying do
-            bodyVelocity.Velocity = Vector3.new(mouse.Hit.LookVector.X * 50, 50, mouse.Hit.LookVector.Z * 50)
-            wait()
-        end
-        bodyVelocity:Destroy()
+JumpButton.Parent = Frame
+JumpButton.Size = UDim2.new(1, 0, 0, 50)
+JumpButton.Position = UDim2.new(0, 0, 0, 100)
+JumpButton.Text = "Jump"
+JumpButton.MouseButton1Click:Connect(function()
+    if jumpCount < maxJumps then
+        character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        jumpCount = jumpCount + 1
     end
 end)
 
-jumpToggle.MouseButton1Click:Connect(function()
-    infiniteJump = not infiniteJump
-    if infiniteJump then
-        player.Character.Humanoid.JumpPower = 50
-        player.Character.Humanoid.StateChanged:Connect(function(_, newState)
-            if newState == Enum.HumanoidStateType.Freefall then
-                player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
+CloseButton.Parent = Frame
+CloseButton.Size = UDim2.new(1, 0, 0, 50)
+CloseButton.Position = UDim2.new(0, 0, 0, 150)
+CloseButton.Text = "Close"
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        if input.KeyCode == Enum.KeyCode.Space then
+            JumpButton:MouseButton1Click()
+        end
+    end
+end)
+
+game:GetService("RunService").RenderStepped:Connect(function()
+    if flying then
+        local direction = Vector3.new(0, 0, 0)
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            direction = direction + workspace.CurrentCamera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            direction = direction - workspace.CurrentCamera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            direction = direction - workspace.CurrentCamera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            direction = direction + workspace.CurrentCamera.CFrame.RightVector
+        end
+        character:Move(direction * speed)
     else
-        player.Character.Humanoid.JumpPower = 50
+        character.Humanoid.WalkSpeed = speed
+    end
+end)
+
+character.Humanoid.Jumping:Connect(function()
+    if character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping then
+        jumpCount = 0
     end
 end)
