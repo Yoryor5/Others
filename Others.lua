@@ -1,73 +1,76 @@
+# 99 Nights in the Forest - Movement and Speed GUI
+
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
-
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 200, 0, 100)
-frame.Position = UDim2.new(0.5, -100, 0.5, -50)
-frame.BackgroundColor3 = Color3.new(0, 0, 0)
-frame.BackgroundTransparency = 0.5
-
-local walkSpeedSlider = Instance.new("TextBox", frame)
-walkSpeedSlider.Size = UDim2.new(1, 0, 0, 30)
-walkSpeedSlider.Position = UDim2.new(0, 0, 0, 10)
-walkSpeedSlider.Text = "Walk Speed (default 16)"
-walkSpeedSlider.TextColor3 = Color3.new(1, 1, 1)
-
-local flyToggle = Instance.new("TextButton", frame)
-flyToggle.Size = UDim2.new(1, 0, 0, 30)
-flyToggle.Position = UDim2.new(0, 0, 0, 50)
-flyToggle.Text = "Toggle Fly"
-flyToggle.TextColor3 = Color3.new(1, 1, 1)
-
-local jumpToggle = Instance.new("TextButton", frame)
-jumpToggle.Size = UDim2.new(1, 0, 0, 30)
-jumpToggle.Position = UDim2.new(0, 0, 0, 90)
-jumpToggle.Text = "Toggle Infinite Jump"
-jumpToggle.TextColor3 = Color3.new(1, 1, 1)
-
+local speed = 16
 local flying = false
-local infiniteJump = false
+local jumpCount = 0
+local maxJumps = 3
 
-function setWalkSpeed(speed)
-    player.Character.Humanoid.WalkSpeed = speed
-end
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local SpeedSlider = Instance.new("Slider")
+local FlyButton = Instance.new("TextButton")
+local JumpButton = Instance.new("TextButton")
+local CloseButton = Instance.new("TextButton")
 
-walkSpeedSlider.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        local speed = tonumber(walkSpeedSlider.Text)
-        if speed then
-            setWalkSpeed(speed)
-        end
-    end
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 200, 0, 300)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -150)
+
+SpeedSlider.Parent = Frame
+SpeedSlider.Size = UDim2.new(1, 0, 0, 50)
+SpeedSlider.MinValue = 16
+SpeedSlider.MaxValue = 100
+SpeedSlider.ValueChanged:Connect(function(value)
+    speed = value
 end)
 
-flyToggle.MouseButton1Click:Connect(function()
+FlyButton.Parent = Frame
+FlyButton.Size = UDim2.new(1, 0, 0, 50)
+FlyButton.Position = UDim2.new(0, 0, 0, 60)
+FlyButton.Text = "Toggle Fly"
+FlyButton.MouseButton1Click:Connect(function()
     flying = not flying
     if flying then
-        local bodyVelocity = Instance.new("BodyVelocity", player.Character.HumanoidRootPart)
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
-
+        player.Character.Humanoid.PlatformStand = true
         while flying do
-            bodyVelocity.Velocity = Vector3.new(mouse.Hit.LookVector.X * 50, 50, mouse.Hit.LookVector.Z * 50)
+            player.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame + (mouse.Hit.p - player.Character.HumanoidRootPart.Position).unit * speed
             wait()
         end
-        bodyVelocity:Destroy()
+        player.Character.Humanoid.PlatformStand = false
     end
 end)
 
-jumpToggle.MouseButton1Click:Connect(function()
-    infiniteJump = not infiniteJump
-    if infiniteJump then
-        player.Character.Humanoid.JumpPower = 50
-        player.Character.Humanoid.StateChanged:Connect(function(_, newState)
-            if newState == Enum.HumanoidStateType.Freefall then
-                player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
-    else
-        player.Character.Humanoid.JumpPower = 50
+JumpButton.Parent = Frame
+JumpButton.Size = UDim2.new(1, 0, 0, 50)
+JumpButton.Position = UDim2.new(0, 0, 0, 120)
+JumpButton.Text = "Jump"
+JumpButton.MouseButton1Click:Connect(function()
+    if jumpCount < maxJumps then
+        player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        jumpCount = jumpCount + 1
     end
+end)
+
+CloseButton.Parent = Frame
+CloseButton.Size = UDim2.new(1, 0, 0, 50)
+CloseButton.Position = UDim2.new(0, 0, 0, 180)
+CloseButton.Text = "Close"
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Sync with teammates
+game.Players.PlayerAdded:Connect(function(teammate)
+    teammate.CharacterAdded:Connect(function()
+        teammate.Character.Humanoid.WalkSpeed = speed
+    end)
+end)
+
+player.CharacterAdded:Connect(function(character)
+    character.Humanoid.WalkSpeed = speed
 end)
