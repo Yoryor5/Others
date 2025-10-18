@@ -9,36 +9,26 @@ local jumpCount = 0
 local maxJumps = 3
 
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-local frame = Instance.new("Frame", gui)
-frame.Size = UDim2.new(0, 200, 0, 100)
-frame.Position = UDim2.new(0.5, -100, 0.5, -50)
-frame.BackgroundColor3 = Color3.new(0, 0, 0)
-frame.BackgroundTransparency = 0.5
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local SpeedSlider = Instance.new("TextBox")
+local FlyButton = Instance.new("TextButton")
+local JumpButton = Instance.new("TextButton")
+local CloseButton = Instance.new("TextButton")
 
-local walkSpeedSlider = Instance.new("TextBox", frame)
-walkSpeedSlider.Size = UDim2.new(1, 0, 0, 30)
-walkSpeedSlider.Position = UDim2.new(0, 0, 0, 10)
-walkSpeedSlider.Text = "Walk Speed (default 16)"
-walkSpeedSlider.TextColor3 = Color3.new(1, 1, 1)
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 200, 0, 200)
+Frame.Position = UDim2.new(0.5, -100, 0.5, -100)
+Frame.BackgroundColor3 = Color3.new(1, 1, 1)
 
-local flyToggle = Instance.new("TextButton", frame)
-flyToggle.Size = UDim2.new(1, 0, 0, 30)
-flyToggle.Position = UDim2.new(0, 0, 0, 50)
-flyToggle.Text = "Toggle Fly"
-flyToggle.TextColor3 = Color3.new(1, 1, 1)
-
-local jumpToggle = Instance.new("TextButton", frame)
-jumpToggle.Size = UDim2.new(1, 0, 0, 30)
-jumpToggle.Position = UDim2.new(0, 0, 0, 90)
-jumpToggle.Text = "Toggle Infinite Jump"
-jumpToggle.TextColor3 = Color3.new(1, 1, 1)
-
-local flying = false
-local infiniteJump = false
-
-function setWalkSpeed(speed)
-    player.Character.Humanoid.WalkSpeed = speed
-end
+SpeedSlider.Parent = Frame
+SpeedSlider.Size = UDim2.new(1, 0, 0, 50)
+SpeedSlider.Text = "Speed: " .. speed
+SpeedSlider.FocusLost:Connect(function()
+    speed = tonumber(SpeedSlider.Text) or speed
+    SpeedSlider.Text = "Speed: " .. speed
+end)
 
 walkSpeedSlider.FocusLost:Connect(function(enterPressed)
     if enterPressed then
