@@ -1,97 +1,73 @@
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local UserInputService = game:GetService("UserInputService")
-local UIS = game:GetService("UserInputService")
-local speed = 16
+local mouse = player:GetMouse()
+
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 200, 0, 100)
+frame.Position = UDim2.new(0.5, -100, 0.5, -50)
+frame.BackgroundColor3 = Color3.new(0, 0, 0)
+frame.BackgroundTransparency = 0.5
+
+local walkSpeedSlider = Instance.new("TextBox", frame)
+walkSpeedSlider.Size = UDim2.new(1, 0, 0, 30)
+walkSpeedSlider.Position = UDim2.new(0, 0, 0, 10)
+walkSpeedSlider.Text = "Walk Speed (default 16)"
+walkSpeedSlider.TextColor3 = Color3.new(1, 1, 1)
+
+local flyToggle = Instance.new("TextButton", frame)
+flyToggle.Size = UDim2.new(1, 0, 0, 30)
+flyToggle.Position = UDim2.new(0, 0, 0, 50)
+flyToggle.Text = "Toggle Fly"
+flyToggle.TextColor3 = Color3.new(1, 1, 1)
+
+local jumpToggle = Instance.new("TextButton", frame)
+jumpToggle.Size = UDim2.new(1, 0, 0, 30)
+jumpToggle.Position = UDim2.new(0, 0, 0, 90)
+jumpToggle.Text = "Toggle Infinite Jump"
+jumpToggle.TextColor3 = Color3.new(1, 1, 1)
+
 local flying = false
-local jumpCount = 0
-local maxJumps = 3
+local infiniteJump = false
 
-local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local SpeedSlider = Instance.new("TextBox")
-local FlyButton = Instance.new("TextButton")
-local JumpButton = Instance.new("TextButton")
-local CloseButton = Instance.new("TextButton")
+function setWalkSpeed(speed)
+    player.Character.Humanoid.WalkSpeed = speed
+end
 
-ScreenGui.Parent = player:WaitForChild("PlayerGui")
-Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 200, 0, 200)
-Frame.Position = UDim2.new(0.5, -100, 0.5, -100)
-Frame.BackgroundColor3 = Color3.new(1, 1, 1)
-
-SpeedSlider.Parent = Frame
-SpeedSlider.Size = UDim2.new(1, 0, 0, 50)
-SpeedSlider.Text = "Speed: " .. speed
-SpeedSlider.FocusLost:Connect(function()
-    speed = tonumber(SpeedSlider.Text) or speed
-    SpeedSlider.Text = "Speed: " .. speed
+walkSpeedSlider.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local speed = tonumber(walkSpeedSlider.Text)
+        if speed then
+            setWalkSpeed(speed)
+        end
+    end
 end)
 
-FlyButton.Parent = Frame
-FlyButton.Size = UDim2.new(1, 0, 0, 50)
-FlyButton.Position = UDim2.new(0, 0, 0, 50)
-FlyButton.Text = "Toggle Fly"
-FlyButton.MouseButton1Click:Connect(function()
+flyToggle.MouseButton1Click:Connect(function()
     flying = not flying
     if flying then
-        character.Humanoid.PlatformStand = true
+        local bodyVelocity = Instance.new("BodyVelocity", player.Character.HumanoidRootPart)
+        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+        bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+
+        while flying do
+            bodyVelocity.Velocity = Vector3.new(mouse.Hit.LookVector.X * 50, 50, mouse.Hit.LookVector.Z * 50)
+            wait()
+        end
+        bodyVelocity:Destroy()
+    end
+end)
+
+jumpToggle.MouseButton1Click:Connect(function()
+    infiniteJump = not infiniteJump
+    if infiniteJump then
+        player.Character.Humanoid.JumpPower = 50
+        player.Character.Humanoid.StateChanged:Connect(function(_, newState)
+            if newState == Enum.HumanoidStateType.Freefall then
+                player.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
     else
-        character.Humanoid.PlatformStand = false
-    end
-end)
-
-JumpButton.Parent = Frame
-JumpButton.Size = UDim2.new(1, 0, 0, 50)
-JumpButton.Position = UDim2.new(0, 0, 0, 100)
-JumpButton.Text = "Jump"
-JumpButton.MouseButton1Click:Connect(function()
-    if jumpCount < maxJumps then
-        character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        jumpCount = jumpCount + 1
-    end
-end)
-
-CloseButton.Parent = Frame
-CloseButton.Size = UDim2.new(1, 0, 0, 50)
-CloseButton.Position = UDim2.new(0, 0, 0, 150)
-CloseButton.Text = "Close"
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
-UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        if input.KeyCode == Enum.KeyCode.Space then
-            JumpButton:MouseButton1Click()
-        end
-    end
-end)
-
-game:GetService("RunService").RenderStepped:Connect(function()
-    if flying then
-        local direction = Vector3.new(0, 0, 0)
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            direction = direction + workspace.CurrentCamera.CFrame.LookVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-            direction = direction - workspace.CurrentCamera.CFrame.LookVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-            direction = direction - workspace.CurrentCamera.CFrame.RightVector
-        end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-            direction = direction + workspace.CurrentCamera.CFrame.RightVector
-        end
-        character:Move(direction * speed)
-    else
-        character.Humanoid.WalkSpeed = speed
-    end
-end)
-
-character.Humanoid.Jumping:Connect(function()
-    if character.Humanoid:GetState() == Enum.HumanoidStateType.Jumping then
-        jumpCount = 0
+        player.Character.Humanoid.JumpPower = 50
     end
 end)
